@@ -7,8 +7,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import volunteeringapp.testing.Event;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -51,14 +49,14 @@ public class viewEvent extends HttpServlet {
 		}
 		return connection;
 	}
-	/**
-	 * @see HttpServlet#HttpServlet()
-	 */
-	public viewEvent() {
-	    super();
-	    // TODO Auto-generated constructor stub
-	}
-	
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public viewEvent() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -98,47 +96,134 @@ public class viewEvent extends HttpServlet {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
-	//method to redirect to register page
-		private void showNewForm(HttpServletRequest request, HttpServletResponse response)
-		throws ServletException, IOException {
-		RequestDispatcher dispatcher = request.getRequestDispatcher("addEvent.jsp");
-		dispatcher.forward(request, response);
-		}
-		
-		//method to get parameter, query database for existing user data and redirect to user edit page
-		private void showEditForm(HttpServletRequest request, HttpServletResponse response)
-		throws SQLException, ServletException, IOException {
-		System.out.println("comes to showEditForm");
-		
-		//get parameter passed in the URL
-		String date = request.getParameter("date");
-		Event existingEvent = new Event();
-		
-		//database operation, get data for existing user
-		// Step 1: Establishing a Connection
+	
+	private void listEvent(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		List < Event > events = new ArrayList < > ();
 		try (Connection connection = getConnection();
-				
 		// Step 2:Create a statement using connection object
-		PreparedStatement preparedStatement = connection.prepareStatement(SELECT_EVENTS_BY_DATE);) {
-		preparedStatement.setString(1, date);
+		PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_EVENTS);) {
 		System.out.println(preparedStatement);
-		
-		// Step 3: Execute the query or update query
+		// Step 3: Execute the query or update query 
 		ResultSet rs = preparedStatement.executeQuery();
-		
 		// Step 4: Process the ResultSet object.
 		while (rs.next()) {
-		date = rs.getString("date");
+		String date = rs.getString("date");
 		String location = rs.getString("location");
 		String eventDescription = rs.getString("eventDescription");
 		String commitment = rs.getString("commitment");
 		String endDate = rs.getString("endDate");
-		existingEvent = new Event(date, location, eventDescription, commitment, endDate);
+		events.add(new Event(date, location, eventDescription, commitment,endDate));
+		System.out.println(date);
 		}
-			} catch (SQLException e) {
-					printSQLException(e);
-			}
+		} catch (SQLException e) {
+		printSQLException(e);
 		}
+		//List < Event > listEvent = databaseOperations.selectAllEvents();
+		System.out.println("Total event is: " + events.size());
+		request.setAttribute("listEvent", events);
+		RequestDispatcher dispatcher = request.getRequestDispatcher("viewEvent.jsp");
+		dispatcher.forward(request, response);
+		}
+	
+	//method to redirect to register page
+	private void showNewForm(HttpServletRequest request, HttpServletResponse response)
+	throws ServletException, IOException {
+	RequestDispatcher dispatcher = request.getRequestDispatcher("addEvent.jsp");
+	dispatcher.forward(request, response);
+	}
+	
+	//method to get parameter, query database for existing user data and redirect to user edit page
+	private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+	throws SQLException, ServletException, IOException {
+	System.out.println("comes to showEditForm");
+	
+	//get parameter passed in the URL
+	String date = request.getParameter("date");
+	Event existingEvent = new Event();
+	
+	//database operation, get data for existing user
+	// Step 1: Establishing a Connection
+	try (Connection connection = getConnection();
+			
+	// Step 2:Create a statement using connection object
+	PreparedStatement preparedStatement = connection.prepareStatement(SELECT_EVENTS_BY_DATE);) {
+	preparedStatement.setString(1, date);
+	System.out.println(preparedStatement);
+	
+	// Step 3: Execute the query or update query
+	ResultSet rs = preparedStatement.executeQuery();
+	
+	// Step 4: Process the ResultSet object.
+	while (rs.next()) {
+	date = rs.getString("date");
+	String location = rs.getString("location");
+	String eventDescription = rs.getString("eventDescription");
+	String commitment = rs.getString("commitment");
+	String endDate = rs.getString("endDate");
+	existingEvent = new Event(date, location, eventDescription, commitment, endDate);
+	}
+	} catch (SQLException e) {
+	printSQLException(e);
+	}
+	//Serve up the user-form.jsp
+	request.setAttribute("events", existingEvent);
+	request.getRequestDispatcher("/viewEvent.jsp").forward(request, response);
+	RequestDispatcher dispatcher = request.getRequestDispatcher("user-form.jsp");
+	dispatcher.forward(request, response);
+	}
+	//method to update the user data
+	private void updateEvent(HttpServletRequest request, HttpServletResponse response)
+	throws SQLException, IOException {
+	System.out.println("comes to updateEvent");
+	//get values from the request
+	String oriDate = request.getParameter("oriDate");
+	String date = request.getParameter("Date");
+	String location = request.getParameter("location");
+	String eventDescription = request.getParameter("eventDescription");
+	String commitment = request.getParameter("commitment");
+	String endDate = request.getParameter("endDate");
+	System.out.println(date);
+	System.out.println(location);
+	System.out.println(eventDescription);
+	System.out.println(commitment);
+	System.out.println(endDate);
+	
+	//database operation
+	try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(UPDATE_EVENTS_SQL);) {
+	statement.setString(1, date);
+	statement.setString(2, location);
+	statement.setString(3, eventDescription);
+	statement.setString(4, commitment);
+	statement.setString(5, endDate);
+	int i = statement.executeUpdate();
+	}
+	
+	//redirect us back to UserServlet !note: do change the url to your project name
+	response.sendRedirect("http://localhost:8085//VolunteeringApp/viewEvent.jsp");
+	}
+	
+	//method to delete event
+	private void deleteEvent(HttpServletRequest request, HttpServletResponse response)
+	throws SQLException, IOException {
+	System.out.println("comes to deleteEvent");
+	String date = request.getParameter("date");
+	try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(DELETE_EVENTS_SQL);) {
+	statement.setString(1, date);
+	int i = statement.executeUpdate();
+	}
+	//redirect us back to UserServlet !note: do change the url to your project name
+	response.sendRedirect("http://localhost:8085//VolunteeringApp/viewEvent");
+	}
+
+	private void printSQLException(SQLException ex) { 
+		for (Throwable e: ex) { 
+			if (e instanceof SQLException) { 
+				e.printStackTrace(System.err); 
+				System.err.println("SQLState: " + ((SQLException) e).getSQLState()); 
+				System.err.println("Error Code: " + ((SQLException) e).getErrorCode()); 
+				System.err.println("Message: " + e.getMessage()); Throwable t = ex.getCause(); 
+				while (t != null) { System.out.println("Cause: " + t); t = t.getCause(); 
+=======
 		//Serve up the user-form.jsp
 		request.setAttribute("events", existingEvent);
 		request.getRequestDispatcher("/viewEvent.jsp").forward(request, response);
@@ -199,6 +284,6 @@ public class viewEvent extends HttpServlet {
 					} 
 				} 
 			} 
-		}
+		} 
+	}
 }
-
