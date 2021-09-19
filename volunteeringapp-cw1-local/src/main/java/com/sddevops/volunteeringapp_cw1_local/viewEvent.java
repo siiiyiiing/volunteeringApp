@@ -139,6 +139,55 @@ public class viewEvent extends HttpServlet {
 					printSQLException(e);
 			}
 		}
+		//Serve up the user-form.jsp
+		request.setAttribute("events", existingEvent);
+		request.getRequestDispatcher("/viewEvent.jsp").forward(request, response);
+		RequestDispatcher dispatcher = request.getRequestDispatcher("user-form.jsp");
+		dispatcher.forward(request, response);
+		}
+		//method to update the user data
+		private void updateEvent(HttpServletRequest request, HttpServletResponse response)
+		throws SQLException, IOException {
+		System.out.println("comes to updateEvent");
+		//get values from the request
+		String oriDate = request.getParameter("oriDate");
+		String date = request.getParameter("Date");
+		String location = request.getParameter("location");
+		String eventDescription = request.getParameter("eventDescription");
+		String commitment = request.getParameter("commitment");
+		String endDate = request.getParameter("endDate");
+		System.out.println(date);
+		System.out.println(location);
+		System.out.println(eventDescription);
+		System.out.println(commitment);
+		System.out.println(endDate);
+		
+		//database operation
+		try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(UPDATE_EVENTS_SQL);) {
+		statement.setString(1, date);
+		statement.setString(2, location);
+		statement.setString(3, eventDescription);
+		statement.setString(4, commitment);
+		statement.setString(5, endDate);
+		int i = statement.executeUpdate();
+		}
+		
+		//redirect us back to UserServlet !note: do change the url to your project name
+		response.sendRedirect("http://localhost:8085//VolunteeringApp/viewEvent.jsp");
+		}
+		
+		//method to delete event
+		private void deleteEvent(HttpServletRequest request, HttpServletResponse response)
+		throws SQLException, IOException {
+		System.out.println("comes to deleteEvent");
+		String date = request.getParameter("date");
+		try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(DELETE_EVENTS_SQL);) {
+		statement.setString(1, date);
+		int i = statement.executeUpdate();
+		}
+		//redirect us back to UserServlet !note: do change the url to your project name
+		response.sendRedirect("http://localhost:8085//VolunteeringApp/viewEvent");
+		}
 		private void printSQLException(SQLException ex) { 
 			for (Throwable e: ex) { 
 				if (e instanceof SQLException) { 
