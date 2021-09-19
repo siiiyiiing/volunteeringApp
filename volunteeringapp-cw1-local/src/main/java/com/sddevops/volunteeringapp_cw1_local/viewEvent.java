@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import volunteeringapp.testing.Event;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -96,4 +98,58 @@ public class viewEvent extends HttpServlet {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
+	//method to redirect to register page
+		private void showNewForm(HttpServletRequest request, HttpServletResponse response)
+		throws ServletException, IOException {
+		RequestDispatcher dispatcher = request.getRequestDispatcher("addEvent.jsp");
+		dispatcher.forward(request, response);
+		}
+		
+		//method to get parameter, query database for existing user data and redirect to user edit page
+		private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+		throws SQLException, ServletException, IOException {
+		System.out.println("comes to showEditForm");
+		
+		//get parameter passed in the URL
+		String date = request.getParameter("date");
+		Event existingEvent = new Event();
+		
+		//database operation, get data for existing user
+		// Step 1: Establishing a Connection
+		try (Connection connection = getConnection();
+				
+		// Step 2:Create a statement using connection object
+		PreparedStatement preparedStatement = connection.prepareStatement(SELECT_EVENTS_BY_DATE);) {
+		preparedStatement.setString(1, date);
+		System.out.println(preparedStatement);
+		
+		// Step 3: Execute the query or update query
+		ResultSet rs = preparedStatement.executeQuery();
+		
+		// Step 4: Process the ResultSet object.
+		while (rs.next()) {
+		date = rs.getString("date");
+		String location = rs.getString("location");
+		String eventDescription = rs.getString("eventDescription");
+		String commitment = rs.getString("commitment");
+		String endDate = rs.getString("endDate");
+		existingEvent = new Event(date, location, eventDescription, commitment, endDate);
+		}
+			} catch (SQLException e) {
+					printSQLException(e);
+			}
+		}
+		private void printSQLException(SQLException ex) { 
+			for (Throwable e: ex) { 
+				if (e instanceof SQLException) { 
+					e.printStackTrace(System.err); 
+					System.err.println("SQLState: " + ((SQLException) e).getSQLState()); 
+					System.err.println("Error Code: " + ((SQLException) e).getErrorCode()); 
+					System.err.println("Message: " + e.getMessage()); Throwable t = ex.getCause(); 
+					while (t != null) { System.out.println("Cause: " + t); t = t.getCause(); 
+					} 
+				} 
+			} 
+		}
 }
+
