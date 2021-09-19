@@ -49,4 +49,51 @@ public class viewEvent extends HttpServlet {
 		}
 		return connection;
 	}
+	/**
+	 * @see HttpServlet#HttpServlet()
+	 */
+	public viewEvent() {
+	    super();
+	    // TODO Auto-generated constructor stub
+	}
+	
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+		
+		String action = request.getServletPath();
+		System.out.println("action is " + action);
+		try {
+		switch (action) {
+		case "/VolunteeringApp/new":
+		showNewForm(request, response);
+		break;
+		case "/VolunteeringApp/delete":
+		deleteEvent(request, response);
+		break;
+		case "/VolunteeringApp/edit":
+		showEditForm(request, response);
+		break;
+		case "/VolunteeringApp/update":
+		updateEvent(request, response);
+		break;
+		default:
+		listEvent(request, response);
+		break;
+		}
+		
+		} catch (SQLException ex) {
+		throw new ServletException(ex);
+		}
+	}
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+	}
 }
